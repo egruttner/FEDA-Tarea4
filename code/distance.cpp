@@ -1,39 +1,142 @@
 #include "distance.h"
-
-
 #include <iostream>
 #include <vector>
 #include <algorithm>
 
-int clasica(string S, string T) {
-    int m = S.length();
-    int n = T.length();
+int clasica(string S, string T) 
+{
+  //Obtiene el largo de los strings
+  int m = S.length();
+  int n = T.length();
 
-    // Create a 2D matrix to store the edit distances
-    vector< vector<int> > dp(m + 1, vector<int>(n + 1, 0));
+  //Matriz (vector 2D) para almacenar los cálculos de distancia
+  vector< vector<int> > dp(m + 1, vector<int>(n + 1, 0));
 
-    // Initialize the first row and column of the matrix
-    for (int i = 0; i <= m; ++i)
-        dp[i][0] = i;
-    for (int j = 0; j <= n; ++j)
-        dp[0][j] = j;
+  //Inicializa filas y columnas
+  for (int i = 0; i <= m; ++i)
+      dp[i][0] = i;
+  for (int j = 0; j <= n; ++j)
+      dp[0][j] = j;
 
-    // Calculate edit distances
-    for (int i = 1; i <= m; ++i) {
-        for (int j = 1; j <= n; ++j) {
-            if (S[i - 1] == T[j - 1])
-                dp[i][j] = dp[i - 1][j - 1];
-            else
-                dp[i][j] = 1 + std::min(dp[i - 1][j], dp[i][j - 1]);
+  //Realiza el cálculo dinámico de distancias
+  for (int i = 1; i <= m; ++i) 
+  {
+      for (int j = 1; j <= n; ++j) 
+      {
+          if (S[i - 1] == T[j - 1])
+          {
+              dp[i][j] = dp[i - 1][j - 1]; //queda igual, no suma costo
+          }
+          else
+          {
+              dp[i][j] = 1 + min(dp[i - 1][j], dp[i][j - 1]); //costo 1 + DELETE o INSERT
+          }
+      }
+  }
+
+  //Retorna la distancia que queda "al final" de la matriz de cálculo
+  return dp[m][n];
+};
+
+
+int verifica(string S, string T, int D) 
+{  
+  //Obtiene el largo de los strings
+  int m = S.length();
+  int n = T.length();
+  
+  //Si el valor absoluto de la diferencia de longitudes es mayor que D, retornar n+m+1
+  if (abs(m - n) > D) 
+  {
+    return m + n + 1;
+  }
+
+  //Matriz (Vector 2D) para almacenar los cálculos de distancia
+  vector<vector<int>> dp(m+1, vector<int>(n+1));
+
+  //A diferencia del llenado de la matriz clásica, en este caso se completa
+  //solamente lo que se va a utilizar, y se rellena con 0 si no
+  for(int i = 0; i <= m; i++)
+  {
+    dp[i][max(0,i-D-1)] = i;
+  } 
+  
+  for(int j=0; j <= n; j++)
+  {
+    dp[max(0,j-D-1)][j] = j;
+  } 
+
+  //Se opera con el pasillo central
+  for (int i = 1; i <= m; i++) 
+  {
+      for (int j = max(1,i-D); j <=min(n,i+D); j++) 
+      {
+          if (S[i-1] == T[j-1]) 
+          {
+            dp[i][j] = dp[i-1][j-1]; //queda igual, no suma costo
+          } 
+          else 
+          {
+            dp[i][j] = 1 + min(dp[i-1][j], dp[i][j-1]); //costo 1 + DELETE o INSERT
+          }
+        //Condición especial: si la distancia actual es superior a lo buscado, sale y entrega n+m+1
+        if(dp[i][i]>D)
+        {          
+          return n+m+1;
         }
+      }
+  }
+
+  //Si la distancia calculada es menor que la buscada, entonces entrega esa solución
+  if(dp[m][n] <= D)
+  {
+    return dp[m][n];
+  }
+
+  //Si no ha salido antes, se va por el caso por defecto, entregando m+n+1
+  return (m+n+1);
+};
+
+
+int adaptiva(string S, string T) 
+{
+  //Obtiene el largo de los strings
+  int m = S.length();
+  int n = T.length();
+
+  //Variables e inicialización
+  int calculo;
+  int distancia_llamada=0;
+  int aux=0;
+
+  //Prospectando distancias
+  while(distancia_llamada <= m+n)
+  {
+
+    calculo = verifica(S,T,distancia_llamada);
+
+    if(calculo < m+n+1)
+    {
+      return calculo;
     }
 
-    return dp[m][n];
+    if(distancia_llamada * 2 > m+n)
+    {
+      distancia_llamada = m+n;
+    }
+    else
+    {
+      distancia_llamada=pow(2,aux);
+      aux++;
+    }
+  }
+  return m+n;
 };
 
 
 
 
+//////////ZONA DE PRUEBAS/////////////
 int clasica_old_old(string S, string T) 
 {
   //Obtiene el largo de los strings
@@ -93,10 +196,6 @@ int clasica_old_old(string S, string T)
         //-dp[j-1] (distancia para transformar la subcadena de S hasta
         // la posición anterior en una subcadena de T hasta la posición actual).
         //Se le suma 1 al mínimo valor porque es una operación más.
-
-
-
-
 
       //insertion = d[i][j - 1];
       //deletion = d[i - 1][j];
@@ -173,93 +272,3 @@ int clasica_old(string S, string T)
   return dp[m][n];
 
 };
-
-
-
-int verifica(string S, string T, int D) {
-  
-  int m = S.length();
-  int n = T.length();
-  
-  // Caso base: si la diferencia de longitudes es mayor que D, retornar n+m+1
-  if (abs(m - n) > D) {
-    return m + n + 1;
-  }
-
-  // en caso de que la segunda cadena se mayor a la primera se intercambian para trabajar 
-  // siempre con la misma forma de matriz
-  if (m > n) {
-        swap(S, T);
-        swap(m, n);
-    }
-
-  // Se crea un vector inicial que guaradará las distancias entre los distintos largos de las
-  // cadenas de texto.
-  vector<vector<int>> dp(m+1, vector<int>(n+1));
-
-  // Se completa la primera fila y columna con las distancias, correspondientes a uno de los 
-  // textos vacios y a otro con i o j caracteres.
-  for(int i = 0; i <= m; i++){
-    dp[i][max(0,i-D-1)] = i;
-  } 
-  
-  for(int i=0; i <= n; i++){
-    dp[max(0,i-D-1)][i] = i;
-  } 
-
-
-  // Se continua con elementos del corredor central
-  for (int i = 1; i <= m; i++) {
-      // Calcular las columnas restantes de la matriz de distancias actual
-      for (int j = max(1,i-D); j <=min(n,i+D); j++) {
-          if (S[i-1] == T[j-1]) {
-            dp[i][j] = dp[i-1][j-1]; // En caso de que sean iguales
-          } else {
-            dp[i][j] = 1 + min(dp[i-1][j], dp[i][j-1]);// en caso de que sean distintas se ve 
-                                                       // cual tiene la menor distancia.
-          }
-      }
-  }
-
-//prueba de impresión de matriz
-//
-// for(int k=0;k<m;k++){
-//  for(int g =0;g<n;g++){
-//
-//    cout<<dp[k][g]<<"   ";
-//  }
-//  cout<<endl;
-// }
-
-  //Finalmente retorna 
-    if(dp[m][n] <= D)
-    {
-      return dp[m][n];
-    }
-    return (m + n + 1);
-};
-
-
-int adaptiva(string S, string T) 
-{
-
-  int m = S.length();
-  int n = T.length();
-  int jump=1;
-  int result;
-
-  while(jump<=m+n){
-
-    result = verifica(S,T,jump);
-    //cout<<"Para jump "<<jump<<" verifica retorna "<<result<<endl;
-    if(result < m+n+1){
-      return result;
-    }
-    if(jump*2>m+n){
-      jump = m+n;
-    }else{
-      jump=jump*2;
-    }
-  }
-  return n+m;
-}

@@ -8,7 +8,7 @@ LDLIBS="distance.cpp"
 
 TEST_CASES_NUMBER := $(shell seq 1 20) #rango de archivos de input y output
 
-RANGE = 3 4#distintas tareas a probar
+RANGE = 1 2 3 4#distintas tareas a probar
 
 # 1 CLASICA - Gutenberg VS Gutenberg
 # 2 ADAPTIVA - Gutenberg VS Gutenberg

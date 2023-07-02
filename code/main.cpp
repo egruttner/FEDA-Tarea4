@@ -24,6 +24,8 @@ long long execution_time_ms(Func function, string tarea, int id_dataset)
 //1 - Ejecución clásica - Gutenberg vs Gutenberg
 void distancia_clasica_g_vs_g(int id_dataset)
 {
+    if (id_dataset>5) return;
+
     //Lectura de archivo 1 en string 1
     stringstream strStream1;
     ifstream file1;
@@ -54,9 +56,11 @@ void distancia_clasica_g_vs_g(int id_dataset)
     return;
 }
 
-//2 - Ejecución adaptiva
+//2 - Ejecución adaptiva - Gutenberg vs Gutenberg
 void distancia_adaptiva_g_vs_g(int id_dataset)
 {
+    if (id_dataset>5) return;
+
     //Lectura de archivo 1 en string 1
     stringstream strStream1;
     ifstream file1; //ARCHIVO DE ENTRADA 1
@@ -122,7 +126,7 @@ void distancia_clasica_g_vs_ag(int id_dataset)
     return;
 }
 
-//4 - Ejecución adaptiva
+//4 - Ejecución adaptiva - Gutenberg Vs Alterado Gutenberg
 void distancia_adaptiva_g_vs_ag(int id_dataset)
 {
     //Lectura de archivo 1 en string 1
@@ -240,7 +244,12 @@ int main(int argv, char* argc[]) {
       }
     }
 
-
+    if ((id_proceso==1 || id_proceso==2) && (atoi(argc[4])>5))
+    {
+      return 0;
+    }
+ 
+    //NO PASA POR ACÁ PORQUE YA HIZO 5 PRUEBAS
     cout<<"Tarea seleccionada: "<< tarea_seleccionada<<endl;
 
     nombre_archivo_salida = dir_csv + tarea_seleccionada + "-results.csv";
@@ -248,7 +257,8 @@ int main(int argv, char* argc[]) {
 
     double mm_total_time = 0;
     int numero_de_experimentos=10;
-    for(int j = 0; j < numero_de_experimentos; j++){ 
+    for(int j = 0; j < numero_de_experimentos; j++)
+    { 
 
         long long single_execution_time = execution_time_ms(centro_tareas, tarea_seleccionada, id_dataset);
         mm_total_time += single_execution_time;
@@ -257,7 +267,8 @@ int main(int argv, char* argc[]) {
     double mm_avg_time = mm_total_time / numero_de_experimentos;
     outfile << n << "," << mm_avg_time <<endl;
     outfile.close(); 
-    
+
+
     return 0;
   }
   else
